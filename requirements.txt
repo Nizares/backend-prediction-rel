@@ -1,0 +1,6 @@
+Flask
+gunicorn
+tensorflow
+joblib
+pillow
+Werkzeug
