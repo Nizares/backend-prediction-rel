@@ -2,6 +2,10 @@ import os
 from flask import Flask, request, jsonify, json, make_response
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
+from tensorflow.keras.models import Sequential
+from tensorflow.keras import optimizers, losses, activations, models
+from tensorflow.keras.layers import Convolution2D, Dense, Input, Flatten, Dropout, MaxPooling2D, BatchNormalization, GlobalAveragePooling2D, Concatenate
+from tensorflow.keras.applications import InceptionV3
 import numpy as np
 import tensorflow as tf
 import tempfile
@@ -9,7 +13,24 @@ import tempfile
 app = Flask(__name__)
 lists = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'I', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
 
-model = load_model("./Model.h5")
+base_model = InceptionV3(weights='imagenet', 
+                                include_top=False, 
+                                input_shape=(150,150,3))
+
+add_model = Sequential()
+add_model.add(base_model)
+add_model.add(GlobalAveragePooling2D())
+add_model.add(tf.keras.layers.Dense(512, activation='relu'))
+add_model.add(tf.keras.layers.Dense(256, activation='relu'))
+add_model.add(Dropout(0.5))      
+add_model.add(Dense(26, activation='softmax'))
+
+model = add_model
+model.compile(loss='categorical_crossentropy', 
+              optimizer=optimizers.Adam(learning_rate=1e-4),
+              metrics=['accuracy'])
+
+model.load_weights("./model_weights.h5")
 
 @app.after_request
 def add_cors_headers(response):
